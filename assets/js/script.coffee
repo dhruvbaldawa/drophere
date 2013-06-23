@@ -1,3 +1,6 @@
+# global namespace
+root = exports ? this
+
 class BaseHandler
     constructor: (@file, @progress_bar, @error_element) ->
 
@@ -36,17 +39,15 @@ class BaseHandler
 
     upload: ->
 
-
 handle_drag_over = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
     evt.originalEvent.dataTransfer.dropEffect = 'copy'
 
-
 handle_drop = (evt) ->
     evt.stopPropagation();
     evt.preventDefault();
-    window.data = evt.originalEvent.dataTransfer
+    drop_zone.removeClass('drag-active')
     files = evt.originalEvent.dataTransfer.files
     console.log files
 
@@ -63,14 +64,27 @@ handle_drop = (evt) ->
         handler = new BaseHandler file, progress_bar, error_element
         handler.read()
 
+handle_drag_enter = (evt) ->
+    evt.stopPropagation()
+    evt.preventDefault()
+    drop_zone.addClass('drag-active')
 
-window.onload = () ->
+handle_drag_leave = (evt) ->
+    evt.stopPropagation()
+    evt.preventDefault()
+    drop_zone.removeClass('drag-active')
+
+window.onready = () ->
     # Check for the various File API support.
     if not (window.File and window.FileReader and window.FileList and window.Blob)
         alert('APIs are not supported')
         # @TODO (DB): better error handling here.
         null
 
-    drop_zone = $('#drop-zone')
+    root.drop_zone = $("#drop-zone")
+
+    # binding events
+    drop_zone.bind 'dragenter', handle_drag_enter
+    drop_zone.bind 'dragleave', handle_drag_leave
     drop_zone.bind 'dragover', handle_drag_over
     drop_zone.bind 'drop', handle_drop
