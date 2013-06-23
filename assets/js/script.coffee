@@ -1,26 +1,22 @@
 # global namespace
 root = exports ? this
 
-class BaseHandler
+class BaseDispatcher
     constructor: (@file, @progress_bar, @error_element) ->
+        @reader = new FileReader
+        @reader.onerror = @error_handler
+        @reader.onprogress = @update_progress
 
-    read: ->
-        reader = new FileReader
-        reader.onerror = @error_handler
-        reader.onprogress = @update_progress
-
-        reader.onabort = (evt) =>
+        @reader.onabort = (evt) =>
             alert 'File reading aborted !'
 
-        reader.onloadstart = (evt) =>
+        @reader.onloadstart = (evt) =>
             console.log 'Loading'
             @progress_bar.html 'Loading'
 
-        reader.onload = (evt) =>
+        @reader.onload = (evt) =>
             console.log 'Loaded'
             @progress_bar.html 'Loaded'
-
-        reader.readAsText @file
 
     error_handler: (evt) ->
         switch evt.target.error.code
@@ -37,7 +33,30 @@ class BaseHandler
                 console.log '#{percent_loaded}%'
                 @progress_bar.html "#{percent_loaded}%"
 
-    upload: ->
+    dispatch: ->
+
+class PasteBinDispatcher extends BaseDispatcher
+    dispatch: =>
+        @reader.readAsText @file
+        root.reader = @reader
+        # request data
+        send_params =
+            api_dev_key: config.pastebin.api_key
+            api_option: 'paste'
+            api_paste_code: @reader.result
+            api_paste_name: @file.name
+            api_paste_private: 1
+
+        ajax_params =
+            type: 'POST'
+            url: config.pastebin.url
+            data: send_params
+            dataType: 'text'
+            progress: @update_progress
+            success: (data) =>
+                console.log data
+
+        $.ajax ajax_params
 
 handle_drag_over = (evt) ->
     evt.stopPropagation()
@@ -61,8 +80,8 @@ handle_drop = (evt) ->
         $('#output').append progress_bar
         $('#output').append error_element
 
-        handler = new BaseHandler file, progress_bar, error_element
-        handler.read()
+        dispatcher = new PasteBinDispatcher file, progress_bar, error_element
+        dispatcher.dispatch()
 
 handle_drag_enter = (evt) ->
     evt.stopPropagation()
