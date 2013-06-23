@@ -92,13 +92,18 @@ handle_drop = function(evt) {
 handle_drag_enter = function(evt) {
   evt.stopPropagation();
   evt.preventDefault();
+  console.log('enter');
   return drop_zone.addClass('drag-active');
 };
 
 handle_drag_leave = function(evt) {
   evt.stopPropagation();
   evt.preventDefault();
-  return drop_zone.removeClass('drag-active');
+  console.log('leave');
+  if (evt.srcElement === drop_mask.get(0)) {
+    console.log(evt);
+    return drop_zone.removeClass('drag-active');
+  }
 };
 
 window.onready = function() {
@@ -107,6 +112,7 @@ window.onready = function() {
     null;
   }
   root.drop_zone = $("#drop-zone");
+  root.drop_mask = $("#drop-zone #drop-mask");
   drop_zone.bind('dragenter', handle_drag_enter);
   drop_zone.bind('dragleave', handle_drag_leave);
   drop_zone.bind('dragover', handle_drag_over);

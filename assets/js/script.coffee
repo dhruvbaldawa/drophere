@@ -67,12 +67,19 @@ handle_drop = (evt) ->
 handle_drag_enter = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
+    console.log 'enter'
     drop_zone.addClass('drag-active')
 
 handle_drag_leave = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
-    drop_zone.removeClass('drag-active')
+    console.log 'leave'
+    # only change when dragleaves the drop_mask, otherwise the evt
+    # is also triggered when it enters any of the children elements of
+    # drop_zone
+    if evt.srcElement is drop_mask.get(0)
+        console.log evt
+        drop_zone.removeClass('drag-active')
 
 window.onready = () ->
     # Check for the various File API support.
@@ -82,6 +89,7 @@ window.onready = () ->
         null
 
     root.drop_zone = $("#drop-zone")
+    root.drop_mask = $("#drop-zone #drop-mask")
 
     # binding events
     drop_zone.bind 'dragenter', handle_drag_enter

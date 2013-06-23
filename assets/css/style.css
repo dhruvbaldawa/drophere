@@ -1,6 +1,6 @@
-#drop-zone {
+#drop-zone, #drop-mask {
     position: absolute;
-    font-color: white;
+    color: #fff;
     top: 0;
     left: 0;
     width: 100%;
