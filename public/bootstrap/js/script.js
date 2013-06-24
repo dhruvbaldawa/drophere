@@ -14,6 +14,8 @@ Uploader = (function() {
 
     this.update_progress = __bind(this.update_progress, this);
 
+    this.before_send = __bind(this.before_send, this);
+
     this._bar = this.progress_bar.find('.bar');
   }
 
@@ -34,12 +36,21 @@ Uploader = (function() {
     return this._bar.width("" + percent + "%");
   };
 
+  Uploader.prototype.before_send = function() {
+    this.progress_bar.addClass('active');
+    this.message.addClass('text-info');
+    return this.message.html('Uploading..');
+  };
+
   Uploader.prototype.update_progress = function(evt) {
     var percent_loaded;
     if (evt.lengthComputable) {
       percent_loaded = Math.round((evt.loaded / evt.total) * 100);
       if (percent_loaded < 100) {
-        console.log("" + percent_loaded + "%");
+        this._update_progress_bar(percent_loaded);
+      }
+      if (percent_loaded > 99.99) {
+        this.message.html('generating url..');
         return this._update_progress_bar(percent_loaded);
       }
     }
@@ -48,13 +59,17 @@ Uploader = (function() {
   Uploader.prototype.upload_complete = function(data) {
     this._update_progress_bar(100);
     console.log(data);
-    return this.progress_bar.removeClass('active');
+    this.progress_bar.removeClass('active');
+    this.progress_bar.addClass('progress-success');
+    this.message.removeClass('text-info').addClass('text-success');
+    return this.message.html("<a href=\"" + data.url + "\" target=\"_blank\">" + data.url + "</a>");
   };
 
   Uploader.prototype.upload = function() {
     var ajax_params, form_data;
     form_data = new FormData;
-    form_data.append(this.file.name, this.file);
+    form_data.append('file', this.file);
+    this.before_send();
     ajax_params = {
       type: 'POST',
       url: '/upload',

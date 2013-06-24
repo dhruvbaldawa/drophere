@@ -6,24 +6,22 @@ service = require('../lib/service');
 fs = require('fs');
 
 exports.upload = function(req, res) {
-  debugger;
-  var file, filename, _ref, _results;
-  _ref = req.files;
-  _results = [];
-  for (filename in _ref) {
-    file = _ref[filename];
-    _results.push(fs.readFile(file.path, {
-      encoding: 'utf-8'
-    }, function(err, data) {
-      file = {
-        data: data,
-        name: file.name,
-        size: file.size,
-        type: file.type
-      };
-      console.log(file);
-      return res.send(file);
-    }));
+  var file, ret_val, s, subtype, type, _ref;
+  file = req.files.file;
+  _ref = file.type.split("/", 1), type = _ref[0], subtype = _ref[1];
+  if (type === 'image') {
+    s = new service.ImgurService;
+  } else {
+    s = new service.PastebinService;
   }
-  return _results;
+  return ret_val = s.dispatch(file, function(error, filename, url, message) {
+    var resp;
+    resp = {
+      error: error,
+      filename: filename,
+      url: url,
+      message: message
+    };
+    return res.send(resp);
+  });
 };

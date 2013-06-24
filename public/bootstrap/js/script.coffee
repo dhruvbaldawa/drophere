@@ -15,23 +15,36 @@ class Uploader
     _update_progress_bar: (percent) ->
         @_bar.width "#{percent}%"
 
+    before_send: =>
+        @progress_bar.addClass('active')
+        @message.addClass('text-info')
+        @message.html('Uploading..')
+
     update_progress: (evt) =>
         if evt.lengthComputable
             percent_loaded = Math.round (evt.loaded / evt.total) * 100
 
             if percent_loaded < 100
-                console.log "#{percent_loaded}%"
+                @_update_progress_bar percent_loaded
+
+            if percent_loaded > 99.99
+                @message.html('generating url..')
                 @_update_progress_bar percent_loaded
 
     upload_complete: (data) =>
         @_update_progress_bar 100
         console.log data
         @progress_bar.removeClass('active')
+        @progress_bar.addClass('progress-success')
+
+        @message.removeClass('text-info').addClass('text-success')
+        @message.html("<a href=\"#{data.url}\" target=\"_blank\">#{data.url}</a>")
 
     upload: ->
         form_data = new FormData
-        form_data.append @file.name, @file
+        form_data.append 'file', @file
 
+        @before_send()
         ajax_params =
             type: 'POST'
             url: '/upload'
@@ -41,6 +54,7 @@ class Uploader
 
             progress: @update_progress
             success: @upload_complete
+            # @TODO (DB): write down an error handler
 
         $.ajax ajax_params
         null

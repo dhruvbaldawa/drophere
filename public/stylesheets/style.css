@@ -7,7 +7,6 @@
   width: 100%;
   height: 100%;
   display: block;
-  z-index: 99999;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
   -moz-opacity: 0;
