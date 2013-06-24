@@ -1,14 +1,22 @@
 service = require '../lib/service'
+fs = require 'fs'
 
 exports.upload = (req, res) ->
-    file =
-        name: 'test.txt'
-        size: 12
-        type: 'text/plain'
-        data: 'Hello World'
-
     debugger
-
-    s = new service.PastebinService file
-    ret_val = s.dispatch()
-    res.send "#{ret_val}"
+    for filename, file of req.files
+        fs.readFile file.path, {encoding: 'utf-8'},(err, data) ->
+            file =
+                data: data
+                name: file.name
+                size: file.size
+                type: file.type
+            # s = new service.PastebinService
+            # ret_val = s.dispatch file, (error, filename, url, message) ->
+            #         resp =
+            #             error: error
+            #             filename: filename
+            #             url: url
+            #             message: message
+            #         res.send resp
+            console.log file
+            res.send file

@@ -1,7 +1,7 @@
 # global namespace
 root = exports ? this
 
-class BaseDispatcher
+class Uploader
     constructor: (@file, @progress_bar, @error_element) ->
         @reader = new FileReader
         @reader.onerror = @error_handler
@@ -33,30 +33,21 @@ class BaseDispatcher
                 console.log '#{percent_loaded}%'
                 @progress_bar.html "#{percent_loaded}%"
 
-    dispatch: ->
-
-class PasteBinDispatcher extends BaseDispatcher
-    dispatch: =>
-        @reader.readAsText @file
-        root.reader = @reader
-        # request data
-        send_params =
-            api_dev_key: config.pastebin.api_key
-            api_option: 'paste'
-            api_paste_code: @reader.result
-            api_paste_name: @file.name
-            api_paste_private: 1
+    upload: ->
+        form_data = new FormData
+        form_data.append @file.name, @file
 
         ajax_params =
             type: 'POST'
-            url: config.pastebin.url
-            data: send_params
-            dataType: 'text'
-            progress: @update_progress
+            url: 'http://localhost:3000/upload'
+            data: form_data
+            contentType: false
+            processData: false
             success: (data) =>
                 console.log data
 
         $.ajax ajax_params
+        null
 
 handle_drag_over = (evt) ->
     evt.stopPropagation()
@@ -80,8 +71,8 @@ handle_drop = (evt) ->
         $('#output').append progress_bar
         $('#output').append error_element
 
-        dispatcher = new PasteBinDispatcher file, progress_bar, error_element
-        dispatcher.dispatch()
+        uploader = new Uploader file, progress_bar, error_element
+        uploader.upload()
 
 handle_drag_enter = (evt) ->
     evt.stopPropagation()
@@ -102,7 +93,7 @@ handle_drag_leave = (evt) ->
 
 window.onready = () ->
     # Check for the various File API support.
-    if not (window.File and window.FileReader and window.FileList and window.Blob)
+    if not (window.File and window.FileReader and window.FileList and window.Blob and window.FormData)
         alert('APIs are not supported')
         # @TODO (DB): better error handling here.
         null
