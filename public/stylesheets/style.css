@@ -6,12 +6,17 @@
   left: 0;
   width: 100%;
   height: 100%;
-  display: block;
+  display: none;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
   -moz-opacity: 0;
   -khtml-opacity: 0;
   opacity: 0;
+}
+
+#drop-mask {
+  display: block;
+  z-index: 99999;
 }
 
 #drop-zone p

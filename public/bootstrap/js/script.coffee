@@ -59,6 +59,18 @@ class Uploader
         $.ajax ajax_params
         null
 
+##
+## Events
+##
+
+_show_overlay = () ->
+    drop_zone.show()
+    drop_zone.addClass('drag-active')
+
+_hide_overlay = () ->
+    drop_zone.hide()
+    drop_zone.removeClass('drag-active')
+
 handle_drag_over = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
@@ -67,7 +79,8 @@ handle_drag_over = (evt) ->
 handle_drop = (evt) ->
     evt.stopPropagation();
     evt.preventDefault();
-    drop_zone.removeClass('drag-active')
+    _hide_overlay()
+
     files = evt.originalEvent.dataTransfer.files
     console.log files
     for file in files
@@ -99,18 +112,15 @@ handle_drag_enter = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
     console.log 'enter'
-    drop_zone.addClass('drag-active')
+    _show_overlay()
 
 handle_drag_leave = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
-    console.log 'leave'
-    # only change when dragleaves the drop_mask, otherwise the evt
-    # is also triggered when it enters any of the children elements of
-    # drop_zone
+    console.log evt
     if evt.srcElement is drop_mask.get(0)
         console.log evt
-        drop_zone.removeClass('drag-active')
+        _hide_overlay()
 
 window.onready = () ->
     # Check for the various File API support.
@@ -123,7 +133,7 @@ window.onready = () ->
     root.drop_mask = $("#drop-zone #drop-mask")
 
     # binding events
-    drop_zone.bind 'dragenter', handle_drag_enter
-    drop_zone.bind 'dragleave', handle_drag_leave
-    drop_zone.bind 'dragover', handle_drag_over
+    $(document).bind 'dragenter', handle_drag_enter
+    $(document).bind 'dragleave', handle_drag_leave
+    $(document).bind 'dragover', handle_drag_over
     drop_zone.bind 'drop', handle_drop
