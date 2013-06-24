@@ -2,21 +2,8 @@
 root = exports ? this
 
 class Uploader
-    constructor: (@file, @progress_bar, @error_element) ->
-        @reader = new FileReader
-        @reader.onerror = @error_handler
-        @reader.onprogress = @update_progress
-
-        @reader.onabort = (evt) =>
-            alert 'File reading aborted !'
-
-        @reader.onloadstart = (evt) =>
-            console.log 'Loading'
-            @progress_bar.html 'Loading'
-
-        @reader.onload = (evt) =>
-            console.log 'Loaded'
-            @progress_bar.html 'Loaded'
+    constructor: (@file, @progress_bar, @message) ->
+        @_bar = @progress_bar.find('.bar')
 
     error_handler: (evt) ->
         switch evt.target.error.code
@@ -25,13 +12,21 @@ class Uploader
             when evt.target.error.ABORT_ERR then null
             else alert 'An error occurred reading this file.'
 
-    update_progress: (evt) ->
+    _update_progress_bar: (percent) ->
+        @_bar.width "#{percent}%"
+
+    update_progress: (evt) =>
         if evt.lengthComputable
             percent_loaded = Math.round (evt.loaded / evt.total) * 100
 
             if percent_loaded < 100
-                console.log '#{percent_loaded}%'
-                @progress_bar.html "#{percent_loaded}%"
+                console.log "#{percent_loaded}%"
+                @_update_progress_bar percent_loaded
+
+    upload_complete: (data) =>
+        @_update_progress_bar 100
+        console.log data
+        @progress_bar.removeClass('active')
 
     upload: ->
         form_data = new FormData
@@ -39,12 +34,13 @@ class Uploader
 
         ajax_params =
             type: 'POST'
-            url: 'http://localhost:3000/upload'
+            url: '/upload'
             data: form_data
             contentType: false
             processData: false
-            success: (data) =>
-                console.log data
+
+            progress: @update_progress
+            success: @upload_complete
 
         $.ajax ajax_params
         null
@@ -60,18 +56,29 @@ handle_drop = (evt) ->
     drop_zone.removeClass('drag-active')
     files = evt.originalEvent.dataTransfer.files
     console.log files
-
     for file in files
-        _progress_bar = document.createElement 'div'
-        _error_element = document.createElement 'div'
+        root.file = file
+        file.id = new Date().getTime() # if same file is added twice.
+        file_html = "
+        <div id=\"file-#{file.name}-#{file.id}\" class=\"file media\">
+            <div class=\"media-body\">
+                <h4 class=\"media-heading\">#{file.name}</h4>
+                <div class=\"message pull-left\">Some message</div>
+                <br>
+                <div class=\"progress-bar progress progress-striped\">
+                    <div class=\"bar\"></div>
+                </div>
+            </div>
+        </div><hr>"
 
-        progress_bar = $(_progress_bar)
-        error_element = $(_error_element)
+        $('#output').append(file_html)
 
-        $('#output').append progress_bar
-        $('#output').append error_element
+        # hack because jQuery can't find the dynamically created element.
+        file_el = document.getElementById "file-#{file.name}-#{file.id}"
+        progress_bar = $(file_el).find '.progress-bar'
+        message = $(file_el).find '.message'
 
-        uploader = new Uploader file, progress_bar, error_element
+        root.uploader = new Uploader file, progress_bar, message
         uploader.upload()
 
 handle_drag_enter = (evt) ->
