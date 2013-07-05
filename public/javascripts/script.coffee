@@ -62,7 +62,7 @@ class Uploader
         @progress_bar.removeClass 'active'
 
         if data.error
-            @progress_bar.addClass 'progress-error'
+            @progress_bar.addClass 'progress-danger'
             @display_error data.message
         else
             @progress_bar.addClass 'progress-success'
@@ -114,7 +114,6 @@ handle_drop = (evt) ->
     _hide_overlay()
 
     files = evt.originalEvent.dataTransfer.files
-    console.log files
     for file in files
         file.id = new Date().getTime() # if same file is added twice.
         file_html = "
@@ -147,7 +146,6 @@ handle_drag_enter = (evt) ->
 handle_drag_leave = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
-    console.log evt
     if evt.srcElement is drop_mask.get(0)
         console.log evt
         _hide_overlay()

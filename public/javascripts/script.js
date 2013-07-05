@@ -106,7 +106,7 @@ Uploader = (function() {
     this._update_progress_bar(100);
     this.progress_bar.removeClass('active');
     if (data.error) {
-      this.progress_bar.addClass('progress-error');
+      this.progress_bar.addClass('progress-danger');
       return this.display_error(data.message);
     } else {
       this.progress_bar.addClass('progress-success');
@@ -162,7 +162,6 @@ handle_drop = function(evt) {
   evt.preventDefault();
   _hide_overlay();
   files = evt.originalEvent.dataTransfer.files;
-  console.log(files);
   _results = [];
   for (_i = 0, _len = files.length; _i < _len; _i++) {
     file = files[_i];
@@ -187,7 +186,6 @@ handle_drag_enter = function(evt) {
 handle_drag_leave = function(evt) {
   evt.stopPropagation();
   evt.preventDefault();
-  console.log(evt);
   if (evt.srcElement === drop_mask.get(0)) {
     console.log(evt);
     return _hide_overlay();
