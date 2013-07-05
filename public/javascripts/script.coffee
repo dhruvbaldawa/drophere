@@ -7,18 +7,44 @@ class Uploader
 
     error_handler: (evt) ->
         switch evt.target.error.code
-            when evt.target.error.NOT_FOUND_ERR then alert 'File Not Found.'
-            when evt.target.error.NOT_READABLE_ERR then alert 'File is not readable.'
+            when evt.target.error.NOT_FOUND_ERR then @display_error 'File Not Found.'
+            when evt.target.error.NOT_READABLE_ERR then @display_error 'File is not readable.'
             when evt.target.error.ABORT_ERR then null
-            else alert 'An error occurred reading this file.'
+            else @display_error 'An error occurred reading this file.'
+
+    before_send: =>
+        @progress_bar.addClass 'active'
+        @display_info 'Uploading..'
 
     _update_progress_bar: (percent) ->
         @_bar.width "#{percent}%"
 
-    before_send: =>
-        @progress_bar.addClass('active')
-        @message.addClass('text-info')
-        @message.html('Uploading..')
+    _reset_message_classes: =>
+        @message.removeClass 'text-info text-error text-class'
+
+    _set_message: (type, message) =>
+        @_reset_message_classes()
+        @message.addClass "text-#{type}"
+        @message.html message
+
+    display_info: (message) =>
+        @_set_message 'info', message
+
+    display_error: (message) =>
+        @_set_message 'error', message
+
+    display_success: (message) =>
+        @_set_message 'success', message
+
+    is_valid: (file) =>
+        MAX_UPLOAD_SIZE = 5 * 1024*1024
+        ALLOWED_TYPES = ['text', 'image']
+        [type, subtype] = file.type.split "/", 1
+
+        if type in ALLOWED_TYPES and file.size <= MAX_UPLOAD_SIZE
+            return true
+        else
+            return false
 
     update_progress: (evt) =>
         if evt.lengthComputable
@@ -28,19 +54,25 @@ class Uploader
                 @_update_progress_bar percent_loaded
 
             if percent_loaded > 99.99
-                @message.html('generating url..')
+                @display_info 'generating url..'
                 @_update_progress_bar percent_loaded
 
     upload_complete: (data) =>
         @_update_progress_bar 100
-        console.log data
-        @progress_bar.removeClass('active')
-        @progress_bar.addClass('progress-success')
+        @progress_bar.removeClass 'active'
 
-        @message.removeClass('text-info').addClass('text-success')
-        @message.html("<a href=\"#{data.url}\" target=\"_blank\">#{data.url}</a>")
+        if data.error
+            @progress_bar.addClass 'progress-error'
+            @display_error data.message
+        else
+            @progress_bar.addClass 'progress-success'
+            @display_success "<a href=\"#{data.url}\" target=\"_blank\">#{data.url}</a>"
 
     upload: ->
+        if not @is_valid @file
+            @display_error 'Only text and image files less than 5MB supported.'
+            return
+
         form_data = new FormData
         form_data.append 'file', @file
 
@@ -84,13 +116,12 @@ handle_drop = (evt) ->
     files = evt.originalEvent.dataTransfer.files
     console.log files
     for file in files
-        root.file = file
         file.id = new Date().getTime() # if same file is added twice.
         file_html = "
         <div id=\"file-#{file.name}-#{file.id}\" class=\"file media\">
             <div class=\"media-body\">
                 <h4 class=\"media-heading\">#{file.name}</h4>
-                <div class=\"message pull-left\">Some message</div>
+                <div class=\"message pull-left\"></div>
                 <br>
                 <div class=\"progress-bar progress progress-striped\">
                     <div class=\"bar\"></div>
@@ -111,7 +142,6 @@ handle_drop = (evt) ->
 handle_drag_enter = (evt) ->
     evt.stopPropagation()
     evt.preventDefault()
-    console.log 'enter'
     _show_overlay()
 
 handle_drag_leave = (evt) ->
