@@ -1,7 +1,7 @@
 app = require '../app.js'
 Browser = require 'zombie'
 chai = require 'chai'
-should = chai.should()
+sinon = require 'sinon'
 expect = chai.expect
 globals = {}
 
@@ -9,9 +9,20 @@ globals = {}
 app.set('env', 'testing')
 app.listen 3000
 
-describe "Web Client UI", ->
+describe "Drag overlay", ->
     browser = new Browser({site: 'http://localhost:3000'})
     overlay_cls = ".drag-active"
+    # mock file drop event object
+    mock_evt =
+        originalEvent:
+            dataTransfer:
+                files: [
+                    name: 'sample_file'
+                    type: 'text/plain'
+                    size: 100
+                ]
+        stopPropagation: () -> null
+        preventDefault: () -> null
 
     after = () ->
         browser.close()
@@ -37,7 +48,6 @@ describe "Web Client UI", ->
     it "check if overlay is hidden on drag leave", (done) ->
         browser.visit("/")
         .then () =>
-            debugger
             browser.fire("#drop-mask", 'dragleave')
             .then () =>
                 overlay = browser.query overlay_cls
@@ -45,6 +55,23 @@ describe "Web Client UI", ->
                 done()
             .fail (error) =>
                 done(error)
+        .fail (error) ->
+            done(error)
+        null
+
+    it "check if dropping file adds the DOM element", (done) ->
+        browser.visit("/")
+        .then () =>
+            browser.window.handle_drop mock_evt
+
+            file_el = browser.query ".file "
+            progressbar = browser.query ".file > .progress-bar"
+            message = browser.query ".file > .message"
+
+            expect(file_el).to.exist
+            expect(progressbar).to.exist
+            expect(message).to.exist
+            done()
         .fail (error) ->
             done(error)
         null
