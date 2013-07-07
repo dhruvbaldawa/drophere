@@ -3,7 +3,8 @@ Browser = require 'zombie'
 chai = require 'chai'
 sinon = require 'sinon'
 expect = chai.expect
-globals = {}
+fs = require 'fs'
+sys = require 'sys'
 
 # start the server application
 app.set('env', 'testing')
@@ -62,12 +63,16 @@ describe "Drag overlay", ->
     it "check if dropping file adds the DOM element", (done) ->
         browser.visit("/")
         .then () =>
+            # hack to add missing FormData class inside the browser
+            browser.window._evaluate fs.readFileSync(fs.realpathSync('.') + '/test/form_data.js', 'utf8')
+
+            # mock the drop event
             browser.window.handle_drop mock_evt
+            file_el = browser.query ".file"
+            progressbar = browser.query ".file .progress-bar"
+            message = browser.query ".file .message"
 
-            file_el = browser.query ".file "
-            progressbar = browser.query ".file > .progress-bar"
-            message = browser.query ".file > .message"
-
+            # assertions
             expect(file_el).to.exist
             expect(progressbar).to.exist
             expect(message).to.exist
