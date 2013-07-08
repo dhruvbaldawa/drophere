@@ -38,6 +38,7 @@ class Uploader
 
     is_valid: (file) =>
         MAX_UPLOAD_SIZE = 5 * 1024*1024
+        # @TODO (DB): change the mimetypes to regexes
         ALLOWED_TYPES = ['text', 'image']
         [type, subtype] = file.type.split "/", 1
 
@@ -73,7 +74,7 @@ class Uploader
             @display_error 'Only text and image files less than 5MB supported.'
             return
 
-        form_data = new FormData
+        form_data = new FormData()
         form_data.append 'file', @file
 
         @before_send()

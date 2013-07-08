@@ -15,17 +15,18 @@ fs = require('fs');
 
 sys = require('sys');
 
-app.set('env', 'testing');
+before(function() {
+  app.set('env', 'testing');
+  return app.listen(3000);
+});
 
-app.listen(3000);
-
-describe("Drag overlay", function() {
-  var after, browser, mock_evt, overlay_cls;
-  browser = new Browser({
-    site: 'http://localhost:3000'
-  });
+describe("Front-end", function() {
+  var $, after, ajax, browser, mock_drop_evt, overlay_cls, stub_ajax;
+  browser = null;
   overlay_cls = ".drag-active";
-  mock_evt = {
+  ajax = null;
+  $ = null;
+  mock_drop_evt = {
     originalEvent: {
       dataTransfer: {
         files: [
@@ -44,61 +45,109 @@ describe("Drag overlay", function() {
       return null;
     }
   };
-  after = function() {
-    browser.close();
-    return app.close();
+  stub_ajax = function(browser) {
+    var stub;
+    return stub = sinon.stub(browser.window.jQuery, 'ajax');
   };
-  it("check if browser is defined", function() {
-    return expect(browser).to.be.ok;
-  });
-  it("check if overlay is displayed on drag over", function(done) {
-    var _this = this;
-    browser.visit("/").then(function() {
-      return browser.fire("body", 'dragenter').then(function() {
-        var overlay;
-        overlay = browser.query(overlay_cls);
-        expect(overlay).to.exist;
-        return done();
-      }).fail(function(error) {
-        return done(error);
-      });
-    }).fail(function(error) {
-      return done(error);
+  beforeEach(function(done) {
+    browser = new Browser({
+      site: 'http://localhost:3000'
     });
-    return null;
-  });
-  it("check if overlay is hidden on drag leave", function(done) {
-    var _this = this;
-    browser.visit("/").then(function() {
-      return browser.fire("#drop-mask", 'dragleave').then(function() {
-        var overlay;
-        overlay = browser.query(overlay_cls);
-        expect(overlay).to.not.exist;
-        return done();
-      }).fail(function(error) {
-        return done(error);
-      });
-    }).fail(function(error) {
-      return done(error);
-    });
-    return null;
-  });
-  return it("check if dropping file adds the DOM element", function(done) {
-    var _this = this;
-    browser.visit("/").then(function() {
-      var file_el, message, progressbar;
+    return browser.visit("/").then(function() {
+      ajax = stub_ajax(browser);
       browser.window._evaluate(fs.readFileSync(fs.realpathSync('.') + '/test/form_data.js', 'utf8'));
-      browser.window.handle_drop(mock_evt);
-      file_el = browser.query(".file");
-      progressbar = browser.query(".file .progress-bar");
-      message = browser.query(".file .message");
-      expect(file_el).to.exist;
-      expect(progressbar).to.exist;
-      expect(message).to.exist;
+      $ = browser.window.jQuery;
       return done();
     }).fail(function(error) {
       return done(error);
     });
-    return null;
   });
+  afterEach(function(done) {
+    browser.close();
+    ajax.restore();
+    return done();
+  });
+  after = function() {
+    browser.close();
+    return app.close();
+  };
+  it("should check if browser is defined", function() {
+    return expect(browser).to.be.ok;
+  });
+  it("should check if overlay is displayed on drag over", function(done) {
+    var _this = this;
+    return browser.fire("body", 'dragenter').then(function() {
+      var overlay;
+      overlay = browser.query(overlay_cls);
+      expect(overlay).to.exist;
+      return done();
+    }).fail(function(error) {
+      return done(error);
+    });
+  });
+  it("should check if overlay is hidden on drag leave", function(done) {
+    var _this = this;
+    return browser.fire("#drop-mask", 'dragleave').then(function() {
+      var overlay;
+      overlay = browser.query(overlay_cls);
+      expect(overlay).to.not.exist;
+      return done();
+    }).fail(function(error) {
+      return done(error);
+    });
+  });
+  it("should check if dropping file adds the DOM element", function() {
+    var file_el, message, progressbar;
+    ajax.yieldsTo("success", {
+      error: false,
+      message: 'message',
+      url: 'http://some.url',
+      filename: 'some-file'
+    });
+    browser.window.handle_drop(mock_drop_evt);
+    file_el = $(".file");
+    progressbar = $(".file .progress-bar");
+    message = $(".file .message");
+    expect(file_el).to.have.length.above(0);
+    expect(progressbar).to.have.length.above(0);
+    return expect(message).to.have.length.above(0);
+  });
+  it("should check if URL is shown on successful upload", function() {
+    ajax.yieldsTo("success", {
+      error: false,
+      message: 'some message',
+      url: 'http://file.url/file',
+      filename: 'file'
+    });
+    browser.window.handle_drop(mock_drop_evt);
+    expect($('.active')).to.have.length(0);
+    expect($('.progress-success')).to.have.length.above(0);
+    expect($('.text-success')).to.have.length.above(0);
+    return expect($('.text-success > a').get(0).href).to.equal('http://file.url/file');
+  });
+  it("should check message when upload is in progress", function() {
+    ajax.yieldsTo("progress", {
+      lengthComputable: true,
+      loaded: 50,
+      total: 100
+    });
+    browser.window.handle_drop(mock_drop_evt);
+    expect($('.active')).to.have.length.above(0);
+    return expect($('.text-info')).to.have.length.above(0);
+  });
+  it("should check if error message is shown on unsuccessful upload", function() {
+    ajax.yieldsTo("success", {
+      error: true,
+      message: 'error',
+      url: '',
+      filename: 'file'
+    });
+    browser.window.handle_drop(mock_drop_evt);
+    expect($('.active')).to.have.length(0);
+    expect($('.progress-danger')).to.have.length.above(0);
+    expect($('.text-error')).to.have.length.above(0);
+    return expect($('.text-error').html()).to.equal('error');
+  });
+  it("should not upload file of invalid type");
+  return it("should not upload file greater than maximum allowed size");
 });

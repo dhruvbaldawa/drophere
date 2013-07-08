@@ -120,7 +120,7 @@ Uploader = (function() {
       this.display_error('Only text and image files less than 5MB supported.');
       return;
     }
-    form_data = new FormData;
+    form_data = new FormData();
     form_data.append('file', this.file);
     this.before_send();
     ajax_params = {

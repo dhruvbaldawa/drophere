@@ -6,15 +6,20 @@ expect = chai.expect
 fs = require 'fs'
 sys = require 'sys'
 
-# start the server application
-app.set('env', 'testing')
-app.listen 3000
+before(() ->
+    # start the server application
+    app.set('env', 'testing')
+    app.listen 3000
+)
 
-describe "Drag overlay", ->
-    browser = new Browser({site: 'http://localhost:3000'})
+describe "Front-end", ->
+    browser = null
     overlay_cls = ".drag-active"
+    ajax = null
+    $ = null
+
     # mock file drop event object
-    mock_evt =
+    mock_drop_evt =
         originalEvent:
             dataTransfer:
                 files: [
@@ -25,58 +30,134 @@ describe "Drag overlay", ->
         stopPropagation: () -> null
         preventDefault: () -> null
 
+    stub_ajax = (browser) ->
+        stub = sinon.stub(browser.window.jQuery, 'ajax')
+
+    beforeEach((done) ->
+        browser = new Browser({site: 'http://localhost:3000'})
+        browser.visit("/")
+        .then () ->
+            ajax = stub_ajax browser
+            # hack to add missing FormData class inside the browser
+            browser.window._evaluate fs.readFileSync(fs.realpathSync('.') + '/test/form_data.js', 'utf8')
+            $ = browser.window.jQuery
+            done()
+        .fail (error) ->
+            done(error)
+    )
+
+    afterEach((done) ->
+        browser.close()
+        ajax.restore()
+        done()
+    )
+
     after = () ->
         browser.close()
         app.close()
 
-    it "check if browser is defined", () ->
+    it "should check if browser is defined", () ->
         expect(browser).to.be.ok
 
-    it "check if overlay is displayed on drag over", (done) ->
-        browser.visit("/")
+    it "should check if overlay is displayed on drag over", (done) ->
+        browser.fire("body", 'dragenter')
         .then () =>
-            browser.fire("body", 'dragenter')
-            .then () =>
-                overlay = browser.query overlay_cls
-                expect(overlay).to.exist
-                done()
-            .fail (error) =>
-                done(error)
-        .fail (error) ->
-            done(error)
-        null
-
-    it "check if overlay is hidden on drag leave", (done) ->
-        browser.visit("/")
-        .then () =>
-            browser.fire("#drop-mask", 'dragleave')
-            .then () =>
-                overlay = browser.query overlay_cls
-                expect(overlay).to.not.exist
-                done()
-            .fail (error) =>
-                done(error)
-        .fail (error) ->
-            done(error)
-        null
-
-    it "check if dropping file adds the DOM element", (done) ->
-        browser.visit("/")
-        .then () =>
-            # hack to add missing FormData class inside the browser
-            browser.window._evaluate fs.readFileSync(fs.realpathSync('.') + '/test/form_data.js', 'utf8')
-
-            # mock the drop event
-            browser.window.handle_drop mock_evt
-            file_el = browser.query ".file"
-            progressbar = browser.query ".file .progress-bar"
-            message = browser.query ".file .message"
-
-            # assertions
-            expect(file_el).to.exist
-            expect(progressbar).to.exist
-            expect(message).to.exist
+            overlay = browser.query overlay_cls
+            expect(overlay).to.exist
             done()
-        .fail (error) ->
+        .fail (error) =>
             done(error)
-        null
+
+    it "should check if overlay is hidden on drag leave", (done) ->
+        browser.fire("#drop-mask", 'dragleave')
+        .then () =>
+            overlay = browser.query overlay_cls
+            expect(overlay).to.not.exist
+            done()
+        .fail (error) =>
+            done(error)
+
+
+    it "should check if dropping file adds the DOM element", () ->
+        # mock the jQuery behaviour
+        ajax
+        .yieldsTo "success",
+            error: false
+            message: 'message'
+            url: 'http://some.url'
+            filename: 'some-file'
+
+
+        # mock the drop event
+        browser.window.handle_drop mock_drop_evt
+        file_el = $(".file")
+        progressbar = $(".file .progress-bar")
+        message = $(".file .message")
+
+        # file element is present
+        expect(file_el).to.have.length.above(0)
+        # progress bar is present
+        expect(progressbar).to.have.length.above(0)
+        # message is present
+        expect(message).to.have.length.above(0)
+
+
+    it "should check if URL is shown on successful upload", () ->
+        ajax
+        .yieldsTo "success",
+            error: false
+            message: 'some message'
+            url: 'http://file.url/file'
+            filename: 'file'
+
+        browser.window.handle_drop mock_drop_evt
+        # progress bar is inactive
+        expect($('.active')).to.have.length(0)
+        # progress bar should show success
+        expect($('.progress-success')).to.have.length.above(0)
+
+        # text should show success
+        expect($('.text-success')).to.have.length.above(0)
+        # text should show URL
+        expect($('.text-success > a').get(0).href).to.equal('http://file.url/file')
+
+
+    it "should check message when upload is in progress", () ->
+        ajax
+        .yieldsTo "progress",
+            lengthComputable: true
+            loaded: 50
+            total: 100
+
+        browser.window.handle_drop mock_drop_evt
+        # progress bar is active
+        expect($('.active')).to.have.length.above(0)
+
+        # text should show info
+        expect($('.text-info')).to.have.length.above(0)
+
+    it "should check if error message is shown on unsuccessful upload", () ->
+        ajax
+        .yieldsTo "success",
+            error: true
+            message: 'error'
+            url: ''
+            filename: 'file'
+
+        browser.window.handle_drop mock_drop_evt
+        # progress bar is inactive
+        expect($('.active')).to.have.length(0)
+        # progress bar should show danger
+        expect($('.progress-danger')).to.have.length.above(0)
+
+        # text should show error
+        expect($('.text-error')).to.have.length.above(0)
+        # text should show the message
+        expect($('.text-error').html()).to.equal('error')
+
+
+    it "should not upload file of invalid type"
+
+
+    it "should not upload file greater than maximum allowed size"
+
