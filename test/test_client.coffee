@@ -59,6 +59,7 @@ describe "Front-end", ->
     it "should check if browser is defined", () ->
         expect(browser).to.be.ok
 
+
     it "should check if overlay is displayed on drag over", (done) ->
         browser.fire("body", 'dragenter')
         .then () =>
@@ -67,6 +68,7 @@ describe "Front-end", ->
             done()
         .fail (error) =>
             done(error)
+
 
     it "should check if overlay is hidden on drag leave", (done) ->
         browser.fire("#drop-mask", 'dragleave')
@@ -136,6 +138,7 @@ describe "Front-end", ->
         # text should show info
         expect($('.text-info')).to.have.length.above(0)
 
+
     it "should check if error message is shown on unsuccessful upload", () ->
         ajax
         .yieldsTo "success",
@@ -156,8 +159,26 @@ describe "Front-end", ->
         expect($('.text-error').html()).to.equal('error')
 
 
-    it "should not upload file of invalid type"
+    it "should not upload file of invalid type", () ->
+        file =
+            name: 'sample_file'
+            type: 'application/pdf'
+            size: 100
+        mock_drop_evt.originalEvent.dataTransfer.files[0] = file
+
+        browser.window.handle_drop mock_drop_evt
+        # text should show error
+        expect($('.text-error')).to.have.length.above(0)
 
 
-    it "should not upload file greater than maximum allowed size"
+    it "should not upload file greater than maximum allowed size", () ->
+        file =
+            name: 'sample_file'
+            type: 'text/plain'
+            size: 10*1024*1024
 
+        mock_drop_evt.originalEvent.dataTransfer.files[0] = file
+
+        browser.window.handle_drop mock_drop_evt
+        # text should show error
+        expect($('.text-error')).to.have.length.above(0)

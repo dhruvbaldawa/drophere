@@ -148,6 +148,26 @@ describe("Front-end", function() {
     expect($('.text-error')).to.have.length.above(0);
     return expect($('.text-error').html()).to.equal('error');
   });
-  it("should not upload file of invalid type");
-  return it("should not upload file greater than maximum allowed size");
+  it("should not upload file of invalid type", function() {
+    var file;
+    file = {
+      name: 'sample_file',
+      type: 'application/pdf',
+      size: 100
+    };
+    mock_drop_evt.originalEvent.dataTransfer.files[0] = file;
+    browser.window.handle_drop(mock_drop_evt);
+    return expect($('.text-error')).to.have.length.above(0);
+  });
+  return it("should not upload file greater than maximum allowed size", function() {
+    var file;
+    file = {
+      name: 'sample_file',
+      type: 'text/plain',
+      size: 10 * 1024 * 1024
+    };
+    mock_drop_evt.originalEvent.dataTransfer.files[0] = file;
+    browser.window.handle_drop(mock_drop_evt);
+    return expect($('.text-error')).to.have.length.above(0);
+  });
 });
