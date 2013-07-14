@@ -1,4 +1,4 @@
-config = require('./config')
+config = require('./config.js')
 request = require('request')
 fs = require('fs')
 

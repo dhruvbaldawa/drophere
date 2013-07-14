@@ -1,7 +1,7 @@
-service = require '../lib/service'
+service = require '../lib/service.js'
 fs = require 'fs'
 
-is_valid: (file) =>
+is_valid = (file) ->
     MAX_UPLOAD_SIZE = 5 * 1024*1024
     # @TODO (DB): change the mimetypes to regexes
     ALLOWED_TYPES = 'text/.*|image/.*'
