@@ -35,7 +35,9 @@ class PastebinService extends Service
             [url, message] = [null, null]
             if error or response.statusCode != 200
                 message = body
+                error = true
             else
+                error = false
                 url = body
 
             callback error, file.name, url, message
@@ -58,11 +60,13 @@ class ImgurService extends Service
         # @TODO (DB): error handling
         request request_params, (error, response, body) ->
             [url, message] = [null, null]
-            link = JSON.parse(body).data.link
             if error or response.statusCode != 200
                 message = body
+                error = true
             else
+                link = JSON.parse(body).data.link
                 url = link
+                error = false
 
             callback error, file.name, url, message
 
