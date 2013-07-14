@@ -8,8 +8,21 @@ block content
 
     .container
         .hero-unit
-            h1 DropHere
+            h1 DropHere <sup class="text-error">alpha</sup>
             p.lead quick file sharing made easy
             p.
-                Drag and drop files from your desktop. We will upload it to the relevant service depending on the type of the file and provide you with the link.
+                Drag and drop files from your desktop.
+
+                We will upload it to the relevant service depending on the type of the file and provide you with the link.
+
+            strong
+                p.text-info.
+                    Note: only text and images less than 5MB are supported for now.
+
         #output.span8.offset2
+        .footer.navbar.navbar-fixed-bottom
+            p.
+                <center>created by <a href="http://www.dhruvb.com/blog/">Dhruv Baldawa</a></center>
+
+    a(href="https://github.com/dhruvbaldawa/drophere")
+        img(style="position: absolute; top: 0; right: 0; border: 0;", src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt="Fork me on GitHub")
