@@ -1,5 +1,5 @@
 {
-  "name": "application-name",
+  "name": "drophere",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,6 +8,13 @@
   "dependencies": {
     "express": "3.2.6",
     "jade": "*",
-    "less-middleware": "*"
+    "less-middleware": "*",
+    "request": "*"
+  },
+  "devDependencies": {
+    "chai": "*",
+    "nock": "*",
+    "sinon": "*",
+    "zombie": "*"
   }
 }
