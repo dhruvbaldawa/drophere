@@ -1,10 +1,10 @@
-app = require '../app.js'
-Browser = require 'zombie'
-chai = require 'chai'
-sinon = require 'sinon'
+app = require('../app.js')
+Browser = require('zombie')
+chai = require('chai')
+sinon = require('sinon')
 expect = chai.expect
-fs = require 'fs'
-sys = require 'sys'
+fs = require('fs')
+sys = require('sys')
 
 before(() ->
     # start the server application
