@@ -5,9 +5,11 @@ A small drag-and-drop file uploader I created which uses the file type to upload
 Text files are uploaded to Pastebin and Image files to Imgur.
 I created this to play with CoffeeScript, Node.js, Express.js and HTML5 Drag and Drop
 
+Live demo at: [DropHere](http://drophere.herokuapp.com)
+
 If you are looking for code, the main files to look at are:
  * lib/service.coffee
- * public/bootstrap/js/script.coffee
+ * public/javascripts/script.coffee
  * routes/upload.coffee
 
 Any suggestions, pull requests would be great :). I wish to add more file types and hosting backends soon.
