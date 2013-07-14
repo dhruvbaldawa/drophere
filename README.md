@@ -9,12 +9,5 @@ If you are looking for code, the main files to look at are:
  * lib/service.coffee
  * public/bootstrap/js/script.coffee
  * routes/upload.coffee
- 
-I wish to make it for robust for now, and add tests. Any help/suggestions for those will be helpful :)
-and then add few more services, and support more file types.
 
-ToDo
-----
- - [] Display messages/errors to the user depending on server-side response.
- - [] Write error checking code for external API requests
- - [] Write tests !
+Any suggestions, pull requests would be great :). I wish to add more file types and hosting backends soon.
