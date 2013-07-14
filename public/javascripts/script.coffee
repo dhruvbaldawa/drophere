@@ -39,10 +39,9 @@ class Uploader
     is_valid: (file) =>
         MAX_UPLOAD_SIZE = 5 * 1024*1024
         # @TODO (DB): change the mimetypes to regexes
-        ALLOWED_TYPES = ['text', 'image']
-        [type, subtype] = file.type.split "/", 1
+        ALLOWED_TYPES = 'text/.*|image/.*'
 
-        if type in ALLOWED_TYPES and file.size <= MAX_UPLOAD_SIZE
+        if file.type.match(ALLOWED_TYPES) and file.size <= MAX_UPLOAD_SIZE
             return true
         else
             return false
