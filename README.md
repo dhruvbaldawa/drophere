@@ -13,3 +13,5 @@ If you are looking for code, the main files to look at are:
  * routes/upload.coffee
 
 Any suggestions, pull requests would be great :). I wish to add more file types and hosting backends soon.
+
+Follow-up blog post here: [[Weekend Project] Drop Here - Dhruv Baldawa's Web Log](http://dhruvb.com/blog/posts/weekend-project-drophere/)
